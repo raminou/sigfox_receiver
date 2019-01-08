@@ -1,6 +1,10 @@
 <?php
 date_default_timezone_set("Europe/Paris");
+include_once('includes/connexion.php');
 
+/*
+ * Convert unsigned to signed
+ */
 function unsigned_to_signed($data, int $size): int
 {
 	if(($data >> ($size-1)) & 0x1 == 1)
@@ -18,37 +22,9 @@ function unsigned_to_signed($data, int $size): int
 		return $data;
 }
 
-try{
-	$pdo = new PDO('sqlite:db/sigfox.db');
-	$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-	$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION); // ERRMODE_WARNING | ERRMODE_EXCEPTION | ERRMODE_SILENT
-} catch(Exception $e) {
-	echo "Impossible d'accéder à la base de données SQLite : ".$e->getMessage();
-	die();
-}
+$pdo = connexionDB();
 
-if(isset($_GET["display"]))
-{
-	$res = $pdo->query("SELECT * FROM data ORDER BY id DESC LIMIT 50");
-	echo "<table>";
-	echo "<tr><th>Temperature de l'air</th><th>Humidité de l'air</th><th>Température du sol</th><th>Humidité du sol</th><th>Pressure</th><th>Champ Magnétique X</th><th>Champ Magnetique Y</th><th>Champ Magnetique Z</th><th>Temps</th></tr>";
-	foreach($res->fetchAll() as $item)
-	{
-		echo "<tr>";
-		echo "<td>".$item["air_temperature"]."</td>";
-		echo "<td>".$item["air_humidity"]."</td>";
-		echo "<td>".$item["ground_temperature"]."</td>";
-		echo "<td>".$item["ground_humidity"]."</td>";
-		echo "<td>".$item["pressure"]."</td>";
-		echo "<td>".$item["magnetic_field_x"]."</td>";
-		echo "<td>".$item["magnetic_field_y"]."</td>";
-		echo "<td>".$item["magnetic_field_z"]."</td>";
-		echo "<td>".date("H:i d/m/Y", $item["time"])."</td>";
-		echo "</tr>";
-	}
-	echo "</table>";
-}
-elseif(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset($_GET["time"]))
+if(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset($_GET["time"]))
 {
 	echo "request received<br/>";
 	$data = $_GET["data"];	// $data sur 64 bits
@@ -95,7 +71,8 @@ elseif(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && is
 	*/
 	$magnetic_field = 0;
 
-	$req = $pdo->prepare("INSERT INTO data (air_temperature, air_humidity, ground_temperature, ground_humidity, pressure, magnetic_field_x, magnetic_field_y, magnetic_field_z, time, device_id) VALUES (:air_temperature, :air_humidity, :ground_temperature, :ground_humidity, :pressure, :magnetic_field_x, :magnetic_field_y, :magnetic_field_z, :time, :device_id)");
+	// Insert in the DATABASE
+	$req = $pdo->prepare("INSERT INTO data (air_temperature, air_humidity, ground_temperature, ground_humidity, pressure, magnetic_field_x, magnetic_field_y, magnetic_field_z, time_capture, device_id) VALUES (:air_temperature, :air_humidity, :ground_temperature, :ground_humidity, :pressure, :magnetic_field_x, :magnetic_field_y, :magnetic_field_z, :time_capture, :device_id)");
 	$req->execute(array(
 		'air_temperature' => $air_temperature,
 		'air_humidity' => $air_humidity,
@@ -105,10 +82,12 @@ elseif(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && is
 		'magnetic_field_x' => $magnetic_field_x,
 		'magnetic_field_y' => $magnetic_field_y,
 		'magnetic_field_z' => $magnetic_field_z,
-		'time' => $_GET["time"],
+		'time_capture' => $_GET["time"],
 		'device_id' => $_GET["id"]
 	));
 	echo "SAVED";
 }
-echo "<a href='index.php?display=true'>Affichage</a>";
+else
+	Header('Location: display.php');
+// echo "<a href='index.php?display=true'>Affichage</a>";
 ?>
