@@ -5,7 +5,7 @@ include_once "configuration.php";
  * Connect to the database
  * Return the PDO Object
  */
-function connexionDB()
+function connexionDB(): PDO
 {
 	try{
 		$pdo = new PDO('sqlite:'.SQLITE_FILE);
@@ -23,7 +23,7 @@ function connexionDB()
  * Request the distinct devices registred in the database
  * Return an Array {"device_id" => device_id, "device_name" => device_name}
  */
-function getDevices($pdo)
+function getDevices($pdo): array
 {
     $req = $pdo->query("SELECT DISTINCT data.device_id, device.device_name FROM data LEFT JOIN device ON data.device_id = device.device_id");
     return $req->fetchAll();
