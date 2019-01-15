@@ -5,7 +5,7 @@ include_once('includes/connexion.php');
 /*
  * Convert unsigned to signed
  */
-function unsigned_to_signed($data, int $size): int
+function unsigned_to_signed(int $data, int $size): int
 {
 	if(($data >> ($size-1)) & 0x1 == 1)
 	{
@@ -15,7 +15,6 @@ function unsigned_to_signed($data, int $size): int
 			// $res += ((($data >> $i) & 0x1) ^ 0x1) * pow(2, $i);
 			$res |= ((($data >> $i) & 0x1) ^ 0x1) << $i;
 		}
-			
 		return -($res+1);
 	}
 	else
@@ -27,8 +26,8 @@ $pdo = connexionDB();
 if(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset($_GET["time"]))
 {
 	echo "request received<br/>";
-	$data = $_GET["data"];	// $data sur 64 bits
-	$data2 = $_GET["data2"]; // $data2 sur 32 bits
+	$data = (int)$_GET["data"];	// $data sur 64 bits
+	$data2 = (int)$_GET["data2"]; // $data2 sur 32 bits
 
 	// Signed Ground temperature 10 bits
 	$ground_temperature = unsigned_to_signed(($data >> (64-10)) / 10, 10);
@@ -37,7 +36,7 @@ if(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset(
 	$air_temperature = unsigned_to_signed((($data >> (64-20)) & 0x3ff) / 10, 10);
 
 	// Unsigned Ground humidity 7 bits
-	$ground_humidity = ($data >> (64-27)) & 0x7f;
+	$ground_humidity = 100 - (($data >> (64-27)) & 0x7f);
 
 	// Unsigned Air humidity 7 bits
 	$air_humidity = ($data >> (64 - 34)) & 0x7f;
@@ -63,7 +62,7 @@ if(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset(
 	// Status Z
 	$status_z = $data2 & 0x1;
 
-	echo "Ground temperature $ground_temperature<br/>Air temperature $air_temperature<br/>Ground humidity $ground_humidity<br/>Air humidity $air_humidity<br/>Pressure $pressure<br/>Magnetic X $magnetic_field_x<br/>Magnetic Y $magnetic_field_y<br/>Magnetic Z $magnetic_field_z<br/>";
+	echo "<br/><br/>Ground temperature $ground_temperature<br/>Air temperature $air_temperature<br/>Ground humidity $ground_humidity<br/>Air humidity $air_humidity<br/>Pressure $pressure<br/>Magnetic X $magnetic_field_x<br/>Magnetic Y $magnetic_field_y<br/>Magnetic Z $magnetic_field_z<br/>";
 	
 	/*$ground_temperature = 0;
 	$ground_humidity = 0;

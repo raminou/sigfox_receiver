@@ -6,7 +6,7 @@ include_once 'includes/connexion.php';
  * $delem_elem: the delimiter between the cells
  * $delim_line: the delimiter between the lines
  */
-function convert_csv($res, $delim_elem=",", $delim_line="\n"): string
+function convert_csv(array $res, string $delim_elem=",", string $delim_line="\n"): string
 {
     $header_csv = "";
     $content_csv = "";
@@ -34,30 +34,32 @@ function convert_csv($res, $delim_elem=",", $delim_line="\n"): string
  * Generate the string
  * $get_params: GET parameters of the request
  */
-function api($get_params): string
+function api(array $get_params): string
 {
-	// Store the errors
+    // Store the errors
     $array_final = array('errors' => array());
     
     try
     {
-		// If this is to export data or to display in the graph
+        // If this is to export data or to display in the graph
         if((isset($get_params["capt"]) && (array_key_exists($get_params["capt"], ARRAY_CAPT) !== false))
             || (isset($get_params["export"]) && ($get_params["export"] == "json" || $get_params["export"] == "csv")))
         {
             $pdo = connexionDB();
             
-			// Every sensors
+            // Every sensors
             if(!isset($get_params["capt"]))
                 $sql = "SELECT data.*, device.device_name FROM data LEFT JOIN device ON data.device_id = device.device_id";
             else
                 $sql = "SELECT data.id, ".$get_params["capt"].", time_capture, data.device_id, device.device_name FROM data LEFT JOIN device ON device.device_id = data.device_id";
             $params_sql = array();
             
+            $device_id_tmp = "";
+            
             // Add where clause if a device has been specified
             if(isset($get_params["device"]))
             {
-				// Add where if this is a specific device
+                // Add where if this is a specific device
                 if($get_params["device"] != "all")
                 {
                     $found = false;
@@ -68,6 +70,7 @@ function api($get_params): string
                             $found = true;
                             $sql .= " WHERE data.device_id = :device_id";
                             $params_sql["device_id"] = $get_params["device"];
+                            $device_id_tmp = $get_params["device"];
                             break;
                         }
                     }
@@ -106,8 +109,8 @@ function api($get_params): string
             
             if(isset($get_params["export"]))
             {
-				// Select MIME Type for the Header
-				switch($get_params["export"])
+                // Select MIME Type for the Header
+                switch($get_params["export"])
                 {
                     case "json":
                         header('Content-Type: application/json');
@@ -125,16 +128,30 @@ function api($get_params): string
             {
                 // JSON for the chart
                 $data = array();
+                $device_name = "";
                 foreach($res as $item)
+                {
+                    if($device_name == "")
+                    {
+                        if(!is_null($item["device_name"]))
+                            $device_name = $item["device_name"]." (".$item["device_id"].")";
+                        else
+                            $device_name = $item["device_id"];
+                    }
+                    
                     $data[] = array(
                         "x" => date('c', $item["time_capture"]),
-                        "y" => (int)$item[$get_params["capt"]],
+                        "y" => $item[$get_params["capt"]],
                         "id" => (int)$item["id"],
                         "device_id" => $item["device_id"],
                         "device_name" => $item["device_name"],
                         "type" => ARRAY_CAPT[$get_params["capt"]]
                     );
-                $array_final['data'] = array('data' => $data, 'label' => ARRAY_CAPT[$get_params["capt"]]['label']);
+                }
+                
+                if($device_name == "")
+                    $device_name = $device_id_tmp;
+                $array_final['data'] = array('data' => $data, 'title' => ARRAY_CAPT[$get_params["capt"]]['label'], "label" => $device_name);
                 $array_final['info'] = ARRAY_CAPT[$get_params["capt"]];
             }
         }
@@ -146,6 +163,7 @@ function api($get_params): string
     catch(Exception $e)
     {
         $array_final['errors'][] = "Unable to connect to the DB";
+        // echo print_r($e);
     }
     return json_encode($array_final);
 }

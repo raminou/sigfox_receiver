@@ -27,3 +27,4 @@ To deploy the application, you have to:
 ## Tested on
 
 Working on PHP 7.2 but should work on PHP 5.
+Be careful this application is only for x64 application ! To change it, you have to modify the sigfox request to send "data" in 2 parts and change the receiving script "index.php".

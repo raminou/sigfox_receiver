@@ -25,6 +25,8 @@ define('ARRAY_CAPT', array(
 // Availible range in the X axis of the chart
 define('ARRAY_RANGE', array(
     "all" => array("label" => "Tout le temps", "sql" => ""),
+    "day" => array("label" => "Dernier jour", "sql" => "-1 day"),
+    "week" => array("label" => "Derniere semaine", "sql" => "-7 day"),
     "month" => array("label" => "Dernier mois", "sql" => "-1 month"),
     "3months" => array("label" => "3 derniers mois", "sql" => "-3 month"),
     "6months" => array("label" => "6 derniers mois", "sql" => "-6 month"),
@@ -32,7 +34,7 @@ define('ARRAY_RANGE', array(
 ));
 
 // Default selected range
-define('DEFAULT_RANGE', ARRAY_RANGE["month"]);
+define('DEFAULT_RANGE', ARRAY_RANGE["week"]);
 
 // Default selected sensor
 define('DEFAULT_CAPT', "air_temperature");
