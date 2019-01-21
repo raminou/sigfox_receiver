@@ -109,6 +109,12 @@ function api(array $get_params): string
             
             if(isset($get_params["export"]))
             {
+		// Convert timestamp to date
+		foreach($res as $key => $value)
+		{
+			$res[$key]["time_capture"] = date("m/d/Y H:i", $value["time_capture"]);
+		}
+
                 // Select MIME Type for the Header
                 switch($get_params["export"])
                 {

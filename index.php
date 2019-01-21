@@ -30,10 +30,10 @@ if(isset($_GET["data"]) && isset($_GET["data2"]) && isset($_GET["id"]) && isset(
 	$data2 = (int)$_GET["data2"]; // $data2 sur 32 bits
 
 	// Signed Ground temperature 10 bits
-	$ground_temperature = unsigned_to_signed(($data >> (64-10)) / 10, 10);
+	$ground_temperature = unsigned_to_signed(($data >> (64-10)), 10) / 10;
 
 	// Signed Air temperature 10 bits
-	$air_temperature = unsigned_to_signed((($data >> (64-20)) & 0x3ff) / 10, 10);
+	$air_temperature = unsigned_to_signed((($data >> (64-20)) & 0x3ff), 10) / 10;
 
 	// Unsigned Ground humidity 7 bits
 	$ground_humidity = 100 - (($data >> (64-27)) & 0x7f);
